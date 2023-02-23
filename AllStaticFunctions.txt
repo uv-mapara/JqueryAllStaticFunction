@@ -1,0 +1,658 @@
+style="background-color:red;"
+----------------------------------------------------------------------------------------------------------------------------------------
+
+ - Kingdom Security 
+----------------------------------------------------------------------------------------------------------------------------------------
+
+setTimeout(function () { $('#drpStatus').next().find('.btn-default').addClass('mt-multiselect'); }, 100);
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - CREATE BLANK ACTION OPERATIONS*/
+#region GenerateAppConfiguration
+public ActionResult ConfigGenApp()
+{
+    return View();
+}
+#endregion
+/*END - CREATE BLANK ACTION OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+RADIO BUTTON VALIDATION
+------------------------------------------------
+if ($('input[name=RdbResponse]:checked').length <= 0) {
+        alert("No radio checked")
+}
+else {
+        if ($('input[name=RdbResponse]:checked').val() == 0) {
+            AddResponse = '0';
+        }
+        else {
+            AddResponse = '1';
+        }
+    }
+
+/*START - SAVE DATA OPERATIONS*/
+$("#btnSubmit").click(function () {
+    SaveData();
+});
+
+function SaveData() {
+    var ErrMsg = '';
+	// FOR TEXTBOX & TEXTAREA VALIDATION
+	if ($("#txtCompanyName").val().trim() == '') {
+        ErrMsg += '<br/>-- Company name.';
+    }
+	
+	// FOR SINGLE SELECT DROPDOWN VALIDATION
+	if ($("#drpMaxTktSrNoLength option:selected").val() == 0) {
+        ErrMsg += '<br/>-- Max. Ticket Sr. No. Length.';
+    }
+	
+	// FOR MULTI SELECT DROPDOWN VALIDATION
+	if ($("#drpRoute option:selected").val() == undefined) {
+        ErrMsg += '<br/>-- Route';
+    }
+	
+	// FOR CHECKBOX VALIDATION
+	if ($("#chkIsActiveYes").is(":checked")) {
+        $("#chkIsActiveYes").val().trim();
+    }
+    else {
+        ErrMsg += '<br/>-- Is Active?';
+    }
+	
+	// FOR SINGLE FILE UPLOAD VALIDATION
+	if (document.getElementById("fileUploadforCSV").files.length == 0) {
+        ErrMsg += '<br/>-- Upload CSV File.';
+    }
+
+    // FOR MULTI SELECT CHECKBOX VALIDATION
+       var fields = $("input[name='chkViewDay']").serializeArray();
+       if (fields.length === 0) {        
+            ErrMsg += '<br/>-- Select at least one option from view by.';
+       }
+
+    if (ErrMsg.length != 0) {
+        ShowMessage("DivDisplayMsg", "alert alert-warning TextBlack", "You have some form errors. Please check below.", '<br/>' + ErrMsg, 0);
+    }
+    else {
+        App.blockUI({                           //OPTION 2 FOR BLOCK UI
+            boxed: true,
+            message: 'Processing...'
+        });
+        $.ajax({
+            url: '',
+            data: {
+                'save': 'Y', 'call': 'ajax'
+            },
+            type: 'POST',
+            success: function (resp) {
+                var resp1; resp1 = resp;
+                $("#SpnTitle").text("Add");
+                DeselectTableRow();
+                ClearData();
+                App.unblockUI();                        //OPTION 2 FOR UNBLOCK UI
+                HideMessage("DivDisplayMsg");
+                ShowMessage("DivDisplayMsg", "alert alert-success TextBlack", "Company Master has been added successfully.", "", 5000);
+				HideToastrMsg();
+                ShowToastrMsg("Success", "toast-top-full-width", "Company Master has been added successfully.", 15000);
+            }
+        });
+    }
+}
+/*END - SAVE DATA OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - CLEAR DATA OPERATIONS*/
+function ClearData() {
+	// CLEAR TEXTBOX OR TEXTAREA
+    $("#txtCompanyName").val('');
+	
+	// CLEAR CHECKBOX 
+    $('input[id="chkIsActiveYes"]').prop('checked', true);
+
+        // MULTISELECT CHECKBOX
+    $("#chkSelectAll").prop("checked", false);
+    $('input[id="chkDate"]').prop('checked', false);
+    $('input[id="chkproduct"]').prop('checked', false);
+    $('input[id="chkroute"]').prop('checked', false);
+    $('input[id="chkjourney"]').prop('checked', false); 
+	
+	// RESET DATEPICKET
+    $('#txtLicenceOnStart').datepicker({
+        orientation: 'bottom',
+        autoclose: true
+    });
+    $('#txtLicenceOnStart').datepicker('setDate', 'today');
+   
+    // CLEAR SINGLE SELECT DROPDOWN
+	$(".drpEmployee").find('.filter-option').text($("select[id=drpEmployee] option[value='0']").text());
+    $('select[id=drpEmployee]').val(0);	
+	
+	// CLEAR MULTI SELECT DROPDOWN
+    $('#drpStatus').multiselect('deselectAll', false);
+    $('#drpStatus').multiselect('updateButtonText');
+    $(".drpStatus").find('.multiselect-selected-text').text('None selected');
+    $('select[id=drpStatus]').val('0');
+	$(".drpStatus").find('.filter-option').text($('#drpStatus').val(0).find('option:selected').text());
+    $('select[id=drpStatus]').val('0');
+	
+	// CLEAR SINGLE SELECT FILE UPLOAD
+	$("#fileUploadforCSV").val('');
+	$(".fileinput-filename").text('');
+	$("#NewFile").removeClass('fileinput-exists').addClass('fileinput-new');
+
+
+    // SET DEFAULT RADIO VALUE - CLICK RESER BUTTON
+       $("#RdbDDAll").prop("checked", true);
+	
+	// CLEAR ERROR MESSAGE
+    HideMessage("DivDisplayMsg");
+	
+	//CLEAR TOASTER ERROR MESSAGE
+	HideToastrMsg();
+}
+/*END - CLEAR DATA OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - MODIFY DATA OPERATIONS*/
+function Edit() {
+    App.blockUI({                           //OPTION 2 FOR BLOCK UI
+        boxed: true,
+        message: 'Processing...'
+    });
+    $.ajax({
+        url: '',
+        data: {
+            'save': 'Y', 'call': 'ajax'
+        },
+        type: 'POST',
+        success: function (resp) {
+            var resp1;
+            resp1 = resp;
+            App.unblockUI();                        //OPTION 2 FOR UNBLOCK UI
+            HideMessage("DivDisplayMsg");
+            ShowMessage("DivDisplayMsg", "alert alert-success TextBlack", "Company Master has been updated successfully.", "", 5000);
+			HideToastrMsg();
+            ShowToastrMsg("Success", "toast-top-full-width", "Company Master has been updated successfully.", 15000);
+        }
+    });
+}
+/*END - MODIFY DATA OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - SELECT ALL OPERATIONS*/
+$("#chkSelectAll").change(function () {
+    $(".chkSelect").prop('checked', $(this).prop("checked"));
+});
+
+OTHER WAY
+
+function ChkAll() {
+    $(".chkSelect").prop('checked', $("#chkSelectAll").prop("checked"));
+}
+
+$(".chkSelect").change(function () {
+    var totalchk = $(".chkSelect").length;
+    var chkSelect = $(".chkSelect:checkbox:checked").length;
+    if (totalchk == chkSelect) {
+        $("#chkSelectAll").prop("checked", true);
+    }
+    else {
+        $("#chkSelectAll").prop("checked", false);
+    }
+});
+
+/*END - SELECT ALL OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - PARTICULAR BLOCK UI SECTION OPERATIONS*/
+App.blockUI({
+    target: '#DivDonutChartAge',
+    boxed: true,
+    message: 'Please wait...'
+});
+	
+$('#DivFindFPN').find('.blockElement').css('top', '45%');
+$('#DivFindFPN').find('.blockElement').css('left', '35%');
+$('#DivFindFPN').find('.blockElement').css('width', '35%');
+
+if (window.matchMedia('(max-width: 768px)').matches) {    
+    $('#DivFindFPN').find('.blockElement').css('top', '45%');
+    $('#DivFindFPN').find('.blockElement').css('left', '35%');
+	$('#DivFindFPN').find('.blockElement').css('width', '35%');
+}
+
+if (window.matchMedia('(max-width: 480px)').matches) {    
+    $('#DivFindFPN').find('.blockElement').css('top', '45%');
+    $('#DivFindFPN').find('.blockElement').css('left', '35%');
+	$('#DivFindFPN').find('.blockElement').css('width', '35%');
+}
+
+App.unblockUI('#DivPieChartRouteAudit');
+/*END - PARTICULAR BLOCK UI SECTION OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - NORMAL BLOCK UI SECTION OPERATIONS*/
+App.blockUI({                           //OPTION 2 FOR BLOCK UI
+    boxed: true,
+    message: 'Processing...'
+});
+
+App.unblockUI();
+/*END - NORMAL BLOCK UI SECTION OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - BLOCK UI CHANGE MESSAGE AFTER SOME TIME*/
+OPTION 1
+--------------
+var BlockMsg = 'Processing...';
+App.blockUI({
+    boxed: true,
+    message: BlockMsg,
+});
+setTimeout(function () { blockmsg = 'We are still working on fetching data...please wait...'; $(".blockUI").css('width','auto').find('span').html("&nbsp;&nbsp;" + BlockMsg) }, 2000);
+
+
+
+OPTION 2
+--------------
+var BlockMsg = 'Processing...';
+App.blockUI({
+    boxed: true,
+    message: BlockMsg,
+    delay: true     //FOR CHANGES IN APP.JS FOR CHANGE MESSAGE IN BLOCK UI
+});
+/*END - BLOCK UI CHANGE MESSAGE AFTER SOME TIME*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - DEFAULT SCROLL DOWN*/
+$("html,body").animate({ scrollTop: 120 }, 1000);
+/*END - DEFAULT SCROLL DOWN*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - BUTTON CLICK EVENT OPERATION*/
+$("#btnSubmit").click(function () {
+    SaveData();
+});
+/*END - BUTTON CLICK EVENT OPERATION*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - RESPONSIVE OPERATIONS*/
+if (window.matchMedia('(max-width: 768px)').matches) {
+    $(".RespColumn").removeClass('CustBorderLeft CustBorderRight');
+}
+
+if (window.matchMedia('(max-width: 480px)').matches) {
+    $(".RespColumn").removeClass('CustBorderLeft CustBorderRight');
+}
+/*END - RESPONSIVE OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - SHOW CONFIRM BOX MODAL OPERATIONS*/
+$('#OpenModal').modal('toggle');
+$('#OpenModal').modal('show');
+ShowModal('Upadte Dir. Structure', 'fa fa-warning font-yellow-gold fa-4x', 'Are you sure want to update Directory Structure ?', 'No', 'Yes');
+$('#OpenModal').modal('hide');
+/*END - SHOW CONFIRM BOX MODAL OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - SHOW CONFIRMATION MODAL OPERATIONS*/
+ShowConfirmModal('Change Status', 'fa fa-warning font-yellow-gold fa-4x', 'Do you want to manually close this duty ?', 'No', 'Yes');
+$("#DivConfirmationBox_Confirm").on('click', functionName);
+
+function functionName(){
+    App.blockUI({
+        boxed: true,
+        message: 'Processing...'
+    });
+    $.ajax({
+        url: '',
+        data: {
+            'save': 'Y', 'call': 'ajax'
+        },
+        type: 'POST',
+        success: function (resp) {
+            App.unblockUI();
+            HideMessage("DivDisplayMsg");
+            HideToastrMsg();
+            ShowToastrMsg("Success", "toast-top-full-width", "Duty has been closed successfully.", 15000);
+            HideConfirmModal();
+        }
+    });
+}
+/*END - SHOW CONFIRMATION MODAL OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+/*START - RADIO BUTTON SELECT CHANGE EVENT*/
+$('input:radio[name=BulkWriteOffCancel]').click(function () {
+    if (this.id == 'rdbCourtDateTime') {
+		alert('Hi..');
+    }
+    if (this.id == 'rdbBatch') {
+        alert('Hello..');
+    }
+});
+/*END - RADIO BUTTON SELECT CHANGE EVENT*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - DROPDOWN CHANGE EVENT*/
+$("#drpCouncil").change(function () {
+	alert('Hello..');
+});
+/*END - DROPDOWN CHANGE EVENT*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - DROPDOWN MULTI VALUE CHANGE EVENT*/
+if ($("#drpCaseStatus option:selected").val().trim() == '0') {
+    alert('Hi..');
+}
+else if ($("#drpCaseStatus option:selected").val().trim() == '1') {
+    alert('Hello..');
+}
+else {
+	alert('How r u..');
+}
+/*END - DROPDOWN MULTI VALUE CHANGE EVENT*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - ALLOW 2 VALUE AFTER DECIMAL*/
+var OldVal = eval($('#txtFine').val());
+var NewVal = OldVal.toFixed(2)
+$('#txtFine').val(NewVal);
+/*END - ALLOW 2 VALUE AFTER DECIMAL*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - CHECKBOX CHECK EVENT OPERATION*/
+OPTION 1
+--------------
+if ($("#chkIsActive").is(":checked")) {
+    alert('Hi..');
+}
+else {
+    alert('Hello..');
+}
+
+OPTION 2
+--------------
+$('#ChkIsSelectOption').change(function () {
+    if ($(this).is(":checked")) {
+        alert('Hi..');
+    }
+    else {
+        alert('Hello..');
+    }
+});
+/*END - CHECKBOX CHECK EVENT OPERATION*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - EACH FUNCTION OPERATION*/
+$('.ClsDeclined').each(function () {
+    alert('Hello..');
+});
+/*END - EACH FUNCTION OPERATION*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - FOR SHOW ACTUAL WIDTH AND HEIGHT OF CURRENT IMAGE OPERATION*/
+$(".ImgActualSize").hover(function () {
+    var currWidth = this.naturalWidth;
+    var currHeight = this.naturalHeight;
+    $(this).attr('data-original-title', 'Actual Size: ' + currWidth + ' x ' + currHeight)
+	}, function () {
+    var currWidth = "";
+    var currHeight = "";
+});
+/*END - FOR SHOW ACTUAL WIDTH AND HEIGHT OF CURRENT IMAGE OPERATION*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - PAGE LOAD OPERATIONS*/
+jQuery(document).ready(function () {
+	// SHOW ONLY DATE
+    $('#txtLicenceOnStart').datepicker({
+        orientation: 'bottom',
+        autoclose: true
+    });
+    $('#txtLicenceOnStart').datepicker('setDate', 'today');
+	
+	// SHOW CURRENT WEEK
+	$('#txtBadgesWeek').datepicker({
+        orientation: 'bottom',
+        autoclose: true,
+        calendarWeeks: true
+    });
+    $('#txtBadgesWeek').datepicker('setDate', 'today');
+    var StartDateWeek = moment($("#txtBadgesWeek").val()).day(0).format("DD/MM/YYYY");
+    var EndDateWeek = moment($("#txtBadgesWeek").val()).day(6).format("DD/MM/YYYY");
+    var OldWeekDates = StartDateWeek + " - " + EndDateWeek;
+    $('#txtBadgesWeek').val(OldWeekDates);
+
+    var NewWeekDates = "";
+    $('#txtBadgesWeek').on('change', function (e) {
+        //$('#txtBadgesWeek').on('dp.change', function (e) {
+        StartDateWeek = moment($("#txtBadgesWeek").val()).day(0).format("DD/MM/YYYY");
+        EndDateWeek = moment($("#txtBadgesWeek").val()).day(6).format("DD/MM/YYYY");
+        NewWeekDates = StartDateWeek + " - " + EndDateWeek;
+        HdnChangedWeekRange = NewWeekDates;
+        $('#txtBadgesWeek').val('');
+        $(this).datepicker('hide');
+        ShowWeekRange();
+    });
+	
+	// SHOW ONLY MONTH & YEAR
+	$('#txtBadgesMonth').datepicker({
+        format: "MM yyyy",
+        viewMode: "years",
+        minViewMode: "months",
+        maxViewMode: "years",
+        orientation: 'bottom',
+        autoclose: true
+    })
+    $('#txtBadgesMonth').datepicker('setDate', 'today');
+    function getLastDayOfMonth() {
+        var today = new Date();
+        var lastOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        alert(lastOfMonth);
+    }
+    function getFirstDayOfMonth() {
+        var today = new Date();
+        var firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        alert(firstOfMonth);
+    }
+	
+	// SHOW ONLY YEAR$('#txtBadgesYear').datepicker({
+        format: "yyyy",
+        viewMode: "years",
+        minViewMode: "years",
+        maxViewMode: "years", 
+        endDate: '+0y',
+        orientation: 'bottom',
+        autoclose: true
+    })
+    $('#txtBadgesYear').datepicker('setDate', 'today');
+	
+	// SHOW ONLY MONTH
+	$('#txtMonthYear').datepicker({
+        format: "MM",
+        viewMode: "months",
+        minViewMode: "months",
+        maxViewMode: "months",
+        orientation: 'bottom',
+        autoclose: true
+    })
+    $('#txtMonthYear').datepicker('setDate', 'today');
+
+    // Click ToDate Close
+    $('#txtFromDate').datepicker({
+        orientation: 'bottom',
+        autoclose: true
+    }).on('changeDate', function () {
+        $('#txtToDate').datepicker('setStartDate', new Date($(this).val()));
+        $('#txtToDate').datepicker('setDate', new Date($(this).val()));
+
+        ///
+        //$('#drpRoute').multiselect('deselectAll', false);
+        BindJourney();
+    });
+    $('#txtFromDate').datepicker('setDate', 'today');
+
+    $('#txtToDate').datepicker({
+        orientation: 'bottom',
+        autoclose: true
+    }).on('changeDate', function () {
+        $('#txtToDate').datepicker('hide');
+        ///
+        //$('#drpRoute').multiselect('deselectAll', false);
+        BindJourney();
+    });
+    $('#txtToDate').datepicker('setDate', 'today');
+	
+	// ADD DATATABLE
+	TableDatatablesColreorderFullCustom.init('GetLatestWebBooking', 50, 'PagingTrue', 'OrderTrue', 'InfoTrue', 'SearchTrue', 0, 'asc', rights);
+	
+	// ADD VERTICAL SCROLL BAR AFTER DATATABLE BIND
+	TableDatatablesColreorderFullCustom.init('GetLatestWebBooking', 50, 'PagingTrue', 'OrderTrue', 'InfoTrue', 'SearchTrue', 0, 'asc', rights);
+    $("#GetLatestWebBooking").parent('.table-scrollable').addClass('VRScrollDashboard');
+});
+/*END - PAGE LOAD OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - REBUILD MULTISELECT DROPDOWN OPERATIONS*/
+function RebuildMultiSelectDRP(ele) {
+	if (ele == undefined) {
+		ele = $('.mt-multiselect');
+	}
+
+    $(ele).each(function () {
+        var btn_class = $(this).attr('class');
+        var clickable_groups = ($(this).data('clickable-groups')) ? $(this).data('clickable-groups') : false;
+        var collapse_groups = ($(this).data('collapse-groups')) ? $(this).data('collapse-groups') : false;
+        var drop_right = ($(this).data('drop-right')) ? $(this).data('drop-right') : false;
+        var drop_up = ($(this).data('drop-up')) ? $(this).data('drop-up') : false;
+        var select_all = ($(this).data('select-all')) ? $(this).data('select-all') : false;
+        var width = ($(this).data('width')) ? $(this).data('width') : '';
+        var height = ($(this).data('height')) ? $(this).data('height') : '';
+        var filter = ($(this).data('filter')) ? $(this).data('filter') : false;
+
+        var li_template;
+        if ($(this).attr('multiple')) {
+            li_template = '<li class="mt-checkbox-list"><a href="javascript:void(0);"><label class="mt-checkbox"> <span></span></label></a></li>';
+        } else {
+            li_template = '<li><a href="javascript:void(0);"><label></label></a></li>';
+        }
+
+        //init.multiselect();
+        $(this).multiselect({
+            enableClickableOptGroups: clickable_groups,
+            enableCollapsibleOptGroups: collapse_groups,
+            disableIfEmpty: true,
+            enableFiltering: filter,
+            includeSelectAllOption: select_all,
+            dropRight: drop_right,
+            buttonWidth: width,
+            maxHeight: height,
+            //onChange: onchange,
+            //onDropdownShow: dropdownshow,
+            //onDropdownHide: dropdownhide,
+            buttonClass: btn_class,
+            //optionClass: function(element) { return "mt-checkbox"; },
+            //optionLabel: function(element) { console.log(element); return $(element).html() + '<span></span>'; },
+            /*templates: {
+                li: li_template,
+            }*/
+        });
+    });
+}
+
+RebuildMultiSelectDRP($('#' + _ddlRouteGroup)); //FOR RUNAT SERVER
+
+/*END - REBUILD MULTISELECT DROPDOWN OPERATIONS*/
+----------------------------------------------------------------------------------------------------------------------------------------
+
+?Ver=<%= Resources.ResourceVersion %> -------------------- ASP.NET VERSIONING
+----------------------------------------------------------------------------------------------------------------------------------------
+
+?Ver=@Resources.ResourceVersion -------------------- MVC VERSIONING
+----------------------------------------------------------------------------------------------------------------------------------------
+
+/*START - SHOW ONLY TIME IN BOOTSTRAP DATETIMEPICKER*/
+IN PAGE
+------------
+<div class="input-group date form_datetime txtDateAndTime Width80">
+    <input name="txtDateAndTime" class="form-control Width80" size="20" type="text" id="txtDateAndTime" readonly="readonly" />
+    <span class="input-group-btn">
+        <button class="btn default date-set" type="button">
+            <i class="fa fa-clock-o"></i>
+        </button>
+    </span>
+</div>
+
+IN JS
+-------
+$('.txtDateAndTime').datetimepicker({
+    pickerPosition: "bottom-left",        
+    autoclose: true,
+    format: "hh:ii",
+    minuteStep: 1,
+    startView: 1,        
+    //endDate: new Date(),
+    //startDate: new Date(),
+});
+
+IN CSS
+----------
+.table-condensed .prev {visibility: hidden !important;}
+.table-condensed .switch {visibility: hidden !important;}
+.table-condensed .next {visibility: hidden !important;}
+/*END - SHOW ONLY TIME IN BOOTSTRAP DATETIMEPICKER*/
+
+/*START - GET EVERY TIME NEW DATE & TIME OPERATION*/
+$(".form_datetime").datetimepicker({
+   pickerPosition: "bottom",
+   autoclose: true,
+   format: "dd MM yyyy hh:ii",
+   minuteStep: 1
+}).on('show', function () {
+   $(this).datetimepicker('setStartDate', new Date());
+});
+/*END - GET EVERY TIME NEW DATE & TIME OPERATION*/
+
+
+/*START - HTML AUDIO FUNCTIONALITY*/
+    var audioElement = document.createElement('audio');
+    audioElement.setAttribute('src', '../Contents/images/AudioRing.mp3');
+
+    function play() {
+        audioElement.play();
+    }
+
+    function pause() {
+        audioElement.pause();
+    }
+
+    function stop() {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+    }
+
+    /*START - AUTOPLAY FUNCTION*/
+    function AutoPlayStart() {
+        setTimeout(function () {
+            /*START - ONETIME PLAYING AUDIO*/
+            //audioElement.play();
+            /*END - ONETIME PLAYING AUDIO*/
+
+            /*START - CONTINUOUSLY PLAYING AUDIO*/
+            audioElement.play();
+            audioElement.addEventListener('ended', function () {
+                audioElement.currentTime = 0;
+                audioElement.play();
+            }, false);
+            varstop = 1;
+            /*END - CONTINUOUSLY PLAYING AUDIO*/
+        }, 1000);
+    }
+    /*END - AUTOPLAY FUNCTION*/
+/*END - HTML AUDIO FUNCTIONALITY*/
